@@ -1,0 +1,18 @@
+{
+  "type": "module",
+  "name": "mcping",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tinyhttp/app": "^2.0.20",
+    "minecraft-server-ping": "^0.0.8"
+  }
+}

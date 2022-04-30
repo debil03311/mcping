@@ -1,0 +1,229 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="theme-color" content="#2d9b55">
+  <meta name="author" content="hosma">
+  <meta name="description" content="Get information about a Minecraft server.">
+  
+  <meta property="og:site_name" content="MC Ping">
+  <meta property="og:title" content="MC Ping">
+  <meta property="og:description" content="Get information about a Minecraft server.">
+
+  <title>Minecraft Server Ping</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Radio+Canada:wght@400;600&display=swap');
+
+    body {
+      min-height: 100vh;
+      background-color: #031014;
+      color: #EEE;
+      font: 400 11pt "Radio Canada", sans-serif;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 1em;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1em;
+    }
+
+    a {
+      color: #2d9b55;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    #search, #server {
+      width: clamp(200px, 90%, 400px);
+    }
+
+    #search {
+      background-color: transparent;
+      color: inherit;
+      font: inherit;
+      font-size: 14pt;
+      text-align: center;
+      border: none;
+      border-bottom: solid 1px #888;
+      outline: none;
+      padding: 8px 0;
+      transition: 200ms border-color;
+    }
+
+    #search:hover {
+      border-color: #FFF;
+    }
+
+    #search:focus {
+      border-color: #2d9b55;
+      caret-color: #2d9b55;
+    }
+
+    #search.error {
+      border-color: crimson;
+    }
+
+    #server {
+      display: grid;
+      grid-template-columns: 1fr 4fr;
+      grid-template-areas:
+        "icon       version"
+        "icon       ping"
+        "icon       online"
+        "desc-text  desc-text"
+        "desc-extra desc-extra"
+        "names      names"
+        "json       json"
+      ;
+      gap: 6px;
+    }
+
+    #icon {
+      grid-area: icon;
+      width: 64px;
+      height: 64px;
+      /* place-self: center; */
+      /* image-rendering: pixelated; */
+      border-radius: 100%;
+      box-shadow: 0 0 0 2px #2d9b55;
+    }
+
+    #version {
+      grid-area: version;
+    }
+
+    #ping {
+      grid-area: ping;
+    }
+
+    #players-count {
+      grid-area: online;
+      display: flex;
+      flex-flow: row nowrap;
+    }
+
+    #players-online {
+      color: #2d9b55;
+      font-weight: bold;
+    }
+
+    #players-max:before {
+      content: "/";
+    }
+
+    #players-names {
+      grid-area: names;
+      margin: 1em 0;
+      display: flex;
+      flex-flow: row wrap;
+      justify-content: center;
+      gap: 4px 8px;
+    }
+
+    #players-names span {
+      background: #2d9b55;
+      color: #031014;
+      font-size: 9pt;
+      font-weight: bold;
+      border-radius: 3px;
+      padding: 3px 8px;
+    }
+
+    #description-text {
+      grid-area: desc-text;
+    }
+
+    #description-extra {
+      grid-area: desc-extra;
+    }
+
+    #json {
+      grid-area: json;
+      place-self: center;
+      font-size: 8pt;
+    }
+  </style>
+</head><body>
+  <input id="search"
+    type="text"
+    placeholder="Server Address"
+    value="mc.hypixel.net">
+
+  <div id="server"></div>
+
+  <script>
+    const e_search = document.getElementById("search");
+    const e_server = document.getElementById("server");
+
+    function removeCodes(text) {
+      return text.replace(/§./g, "");
+    }
+
+    function toElement(text, elementName, style="") {
+      return `<${elementName} style="${style}">${text}</${elementName}>`;
+    }
+
+    async function pingServer() {
+      let data;
+      
+      try {
+        data = await fetch(`./${e_search.value}`)
+          .then((response)=> response.json());
+      } catch {
+        e_search.classList.add("error");
+        return;
+      }
+
+      const serverHtml = /* HTML */ `
+        <img id="icon" src="${data.favicon}" alt="Server Icon">
+        <span id="version">${data.version.name}</span>
+        <span id="ping">${data.ping}ms</span>
+
+        <div id="players-count">
+          <span id="players-online">${data.players.online}</span>
+          <span id="players-max">${data.players.max}</span>
+        </div>
+
+        <div id="description-text">${data.description.text || ""}</div>
+        <div id="description-extra">
+          ${
+            data.description.extra
+              ?.map((item)=> toElement(item.text, "span", `color: ${item.color}`))
+              .join("<br>")
+            || ""
+          }
+        </div>
+
+        <div id="players-names">
+          ${
+            data.players.sample
+              ?.map((player)=> toElement(player.name, "span"))
+              .join("")
+            || ""
+          }
+        </div>
+
+        <a id="json" href="./${e_search.value}">Raw JSON</a>
+      `.replace(/\s{2,/, "");
+
+      e_server.innerHTML = removeCodes(serverHtml);
+    }
+
+    e_search.addEventListener("keydown", (event)=> {
+      e_search.classList.remove("error");
+
+      if (event.key !== "Enter")
+        return;
+
+      pingServer();
+    }, { passive: true });
+  </script>
+</body></html>
